@@ -170,3 +170,97 @@ func TestSnpPlatformInfo(t *testing.T) {
 		}
 	}
 }
+
+func TestDecomposeAuthorKeyEn(t *testing.T) {
+	tests := []struct {
+		input   AuthorKeyEnContainer
+		want    AuthorKeyEnParts
+		wantErr bool
+	}{
+		{
+			input: 0,
+			want:  AuthorKeyEnParts{SigningKey: SigningKeyVCEK},
+		},
+		{
+			input: 0x1,
+			want:  AuthorKeyEnParts{AuthorKeyEn: true, SigningKey: SigningKeyVCEK},
+		},
+		{
+			input: 0x2,
+			want:  AuthorKeyEnParts{MaskChipKey: true, SigningKey: SigningKeyVCEK},
+		},
+		{
+			input: 0x3,
+			want: AuthorKeyEnParts{
+				AuthorKeyEn: true,
+				MaskChipKey: true,
+				SigningKey:  SigningKeyVCEK,
+			},
+		},
+		{
+			input: 0x4,
+			want:  AuthorKeyEnParts{SigningKey: SigningKeyVLEK},
+		},
+		{
+			input: 0x5,
+			want:  AuthorKeyEnParts{AuthorKeyEn: true, SigningKey: SigningKeyVLEK},
+		},
+		{
+			input: 0x6,
+			want:  AuthorKeyEnParts{MaskChipKey: true, SigningKey: SigningKeyVLEK},
+		},
+		{
+			input: 0x7,
+			want: AuthorKeyEnParts{
+				AuthorKeyEn: true,
+				MaskChipKey: true,
+				SigningKey:  SigningKeyVLEK,
+			},
+		},
+		{
+			input:   0x8,
+			wantErr: true,
+		},
+		{
+			input:   0x10,
+			wantErr: true,
+		},
+		{
+			input: 0x1c,
+			want:  AuthorKeyEnParts{SigningKey: SigningKeyNone},
+		},
+		{
+			input: 0x1f,
+			want: AuthorKeyEnParts{
+				AuthorKeyEn: true,
+				MaskChipKey: true,
+				SigningKey:  SigningKeyNone,
+			},
+		},
+		{
+			input:   0x20,
+			wantErr: true,
+		},
+		{
+			input:   0x80000000,
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := DecomposeAuthorKeyEn(tc.input)
+
+		if tc.wantErr != (err != nil) {
+			if err == nil {
+				t.Errorf("DecomposeAuthorKeyEn(%#x) did not error as expected", tc.input)
+				continue
+			}
+			t.Errorf("DecomposeAuthorKeyEn(%#x) errored unexpectedly: %v", tc.input, err)
+			continue
+		}
+
+		if got != tc.want {
+			t.Errorf("DecomposeAuthorKeyEn(%#x) = %v, want %v", tc.input, got, tc.want)
+		}
+	}
+}

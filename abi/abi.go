@@ -702,3 +702,51 @@ func (c *CertTable) Proto() *pb.CertificateChain {
 		FirmwareCert: firmware,
 	}
 }
+
+// SigningKeyType is the type of key used to sign the report.
+type SigningKeyType uint8
+
+const (
+	// SigningKeyVCEK indicates the report is signed by a VCEK.
+	SigningKeyVCEK SigningKeyType = iota
+	// SigningKeyVLEK indicates the report is signed by a VLEK.
+	SigningKeyVLEK
+	signingKeyReserved2
+	signingKeyReserved3
+	signingKeyReserved4
+	signingKeyReserved5
+	signingKeyReserved6
+	// SigningKeyNone indicates the report is not signed.
+	SigningKeyNone
+)
+
+// AuthorKeyEnParts are the decomposed parts of the AuthorKeyEnContainer.
+type AuthorKeyEnParts struct {
+	// SigningKey is the type of key used to sign the report.
+	SigningKey SigningKeyType
+	// MaskChipKey indiacates that chip key masking is enabled.
+	MaskChipKey bool
+	// AuthorKeyEn indicates that the author key is present in AuthorKeyDigest of the report.
+	AuthorKeyEn bool
+}
+
+// DecomposeAuthorKeyEn returns the decomposed parts of the AuthorKeyEnContainer.
+func DecomposeAuthorKeyEn(authorKeyEn AuthorKeyEnContainer) (AuthorKeyEnParts, error) {
+	if authorKeyEn&0xffffffe0 != 0 {
+		return AuthorKeyEnParts{}, fmt.Errorf("reserved bit must be zero: %x", authorKeyEn)
+	}
+
+	signingKey := SigningKeyType((authorKeyEn >> 2) & 0x7)
+	if signingKeyReserved2 <= signingKey && signingKey <= signingKeyReserved6 {
+		return AuthorKeyEnParts{}, fmt.Errorf("reserved signing key type: %x", signingKey)
+	}
+
+	return AuthorKeyEnParts{
+		SigningKey:  signingKey,
+		MaskChipKey: (authorKeyEn & 0x2) != 0,
+		AuthorKeyEn: (authorKeyEn & 0x1) != 0,
+	}, nil
+}
+
+// AuthorKeyEnContainer is the container value with multiple subfields at 48h of the report.
+type AuthorKeyEnContainer uint32
