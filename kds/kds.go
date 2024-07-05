@@ -94,8 +94,10 @@ var (
 	// other than documentation to map a stepping number to a stepping version and
 	// vice versa.
 	steppingDecoder = map[string]*pb.SevProduct{
+		"Milan":    {Name: pb.SevProduct_SEV_PRODUCT_MILAN, MachineStepping: uint0}, // Unspecified stepping, default to 0.
 		"Milan-B0": {Name: pb.SevProduct_SEV_PRODUCT_MILAN, MachineStepping: uint0},
 		"Milan-B1": {Name: pb.SevProduct_SEV_PRODUCT_MILAN, MachineStepping: uint1},
+		"Genoa":    {Name: pb.SevProduct_SEV_PRODUCT_GENOA, MachineStepping: uint0}, // Unspecified stepping, default to 0.
 		"Genoa-B0": {Name: pb.SevProduct_SEV_PRODUCT_GENOA, MachineStepping: uint0},
 		"Genoa-B1": {Name: pb.SevProduct_SEV_PRODUCT_GENOA, MachineStepping: uint1},
 		"Genoa-B2": {Name: pb.SevProduct_SEV_PRODUCT_GENOA, MachineStepping: uint2},
@@ -785,7 +787,7 @@ func ProductName(product *pb.SevProduct) string {
 		if int(stepping) >= len(genoaSteppingVersions) {
 			return "unmappedGenoaStepping"
 		}
-		return fmt.Sprintf("Milan-%s", genoaSteppingVersions[stepping])
+		return fmt.Sprintf("Genoa-%s", genoaSteppingVersions[stepping])
 	default:
 		return "Unknown"
 	}
