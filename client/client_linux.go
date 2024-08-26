@@ -149,7 +149,7 @@ func (p *LinuxIoctlQuoteProvider) GetRawQuoteAtLevel(reportData [64]byte, level 
 	defer d.Close()
 	// If there are no certificates, then just return the raw report.
 	length, err := queryCertificateLength(d, int(level))
-	if err != nil {
+	if err != nil || length == 0 {
 		return GetRawReportAtVmpl(d, reportData, int(level))
 	}
 	certs := make([]byte, length)
